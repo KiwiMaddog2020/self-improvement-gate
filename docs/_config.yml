@@ -1,0 +1,9 @@
+title: "The gate that edits a gate is rejected by the gate it edits"
+description: A safety contract for a self-improving agent loop, as a pure, tested promotion gate
+url: https://kiwimaddog2020.github.io
+baseurl: /self-improvement-gate
+plugins:
+  - jekyll-optional-front-matter
+  - jekyll-default-layout
+  - jekyll-titles-from-headings
+  - jekyll-sitemap
