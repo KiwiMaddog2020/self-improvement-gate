@@ -145,3 +145,7 @@ system's internal state and because, as above, it has not earned the right to ac
 on its own. What is public is the part worth trusting: a small, total function
 that knows it must never be the thing that decides it is allowed to change
 itself.
+
+---
+
+<p class="byline"><em>I build agentic systems across multiple coding LLMs. More of my research notes are <a href="/">here</a>.</em></p>
