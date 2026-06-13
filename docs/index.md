@@ -5,7 +5,7 @@ date: 2026-06-12
 
 # The gate that edits a gate is rejected by the gate it edits
 
-<p class="dek">How to let an AI system propose changes to its own rules without letting it quietly edit the rule that stops it, and why I have not switched the dangerous half on.</p>
+<p class="dek">How to let an AI system propose changes to its own rules without letting it quietly weaken the rule that stops it, and why I have left the dangerous half switched off.</p>
 
 <p class="meta">Kevin Madson · June 2026 · 5 min read</p>
 
@@ -25,48 +25,26 @@ date: 2026-06-12
 
 ## The danger loops back on itself
 
-A system that can change its own rules can, in principle, change the rule that
-holds it back. That is the whole problem in one sentence. If a program is allowed
-to propose edits to its own instructions, the failure you actually fear is not a
-bad proposal. A bad proposal is easy: you reject it. The failure you fear is a
-proposal that quietly rewrites the check that would have rejected it, and then
-sails through the weakened check it just wrote. It is the same worry as someone
-amending a constitution by smuggling the change past the very clause meant to
-forbid it.
+A system that can rewrite its own rules can rewrite the rule that holds it back. That is the whole problem in one sentence. Give a program the power to propose edits to its own instructions and the failure you fear is not a bad proposal. Bad proposals are trivial: you read them, you reject them, done. The one that should keep you up at night is the proposal that quietly loosens the check meant to catch it, then sails through the weakened check it just authored. Picture an amendment that repeals, in its own fine print, the clause that was supposed to forbid it.
 
-So I built the check first, on its own, as what programmers call a pure function:
-a piece of code with no power to do anything except judge. It cannot write, delete,
-or change a single thing. It is about 250 lines of plain Python, and it answers one
-question: may this proposed change be allowed in? It reads what the change touches,
-the evidence behind it, who reviewed it, and the scores, and returns a verdict.
-The interesting part is what it refuses, and the order it refuses in.
+So I wrote the check first, alone, as a pure function: code with no power except to judge. It cannot write, delete, deploy, or touch state. About 250 lines of plain Python, and it answers exactly one question. May this proposed change be admitted? It reads what the change touches, the evidence behind it, who reviewed it, and the scores it carries, and it returns a verdict. The interesting part is not that it says no. It is what it refuses, and the order it refuses in.
 
-## It protects itself, judged against the locked-down original
+## It checks itself against the locked original, not the copy in hand
 
-The verdict that matters most is this one (you can skip the code; the line below
-says it in plain English):
+The verdict that matters most is this one. Skip the code if you like; the sentence under it carries the whole idea.
 
 ```python
 if not _gate_untouched(changed_paths, gate_globs):
     return {"verdict": "blocked_gate_edit", "reason": "gate_file_touched"}
 ```
 
-If the proposed change touches any file on the gate's own protected list, it is
-blocked, full stop. The subtlety is where that protected list comes from: it is read
-from the locked-down original version of the system, never from the copy the change
-itself is carrying. So a proposal cannot shorten the list of things it is forbidden
-to touch, because the list it is checked against is not the one it brought along.
-The gate that edits a gate is rejected by the gate it edits.
+Touch any file on the gate's protected list and the change is blocked, full stop. The subtlety is provenance. That protected list is read from the locked-down original version of the system, never from the copy the change is carrying. A proposal therefore cannot shorten the list of things it is forbidden to touch, because the list it is measured against is not the one it brought to the table. The gate that edits a gate is rejected by the gate it edits.
 
-And this runs before the change is ever scored. Even a fully approved, fully aged,
-independently reviewed change is blocked the instant it touches the safety machinery.
-A test in the repo pins exactly that.
+This fires before any score is computed. A change can be fully aged, fully approved, blessed by an independent reviewer, and it still dies the instant it reaches into the safety machinery. A test in the repo pins precisely that case.
 
-## Four locks in a row, and no one of them opens the door
+## Four locks in a row, each opened by its own key
 
-Self-protection is one of five rules. The first is that the gate cannot be
-shortcut. A change has to clear four checks in order, and each one reads a
-completely separate fact, so passing one can never stand in for another:
+Self-protection is one of five rules. The first: the gate cannot be short-circuited. A change clears four checks in sequence, and each reads a separate fact, so clearing one can never substitute for another.
 
 ```python
 def evaluate(facts):
@@ -77,65 +55,31 @@ def evaluate(facts):
     ...
 ```
 
-Was it actually measured? Did a human sign off on this category of change? Has it
-proven itself over enough cases and enough time? Only then does the last check ask
-whether it touches the safety machinery and whether a genuinely independent
-reviewer approved it. You cannot buy a missing measurement with a great score, or a
-missing human sign-off with a long track record. Each lock opens on its own key.
+Was it measured? Did a human sign off on this category of change? Has it earned its keep over enough cases and enough elapsed time? Only after all three does the last check ask whether the change reaches into the safety machinery, and whether a genuinely independent reviewer approved it. You cannot pay for a missing measurement with a dazzling score, or cover a missing human sign-off with a long track record. Different locks, different keys, no master.
 
 ## You cannot vouch for your own independence
 
-The fourth rule is that the review has to come from a different AI than the one that
-made the change, and the system decides who is who, never the change itself. A
-proposal cannot simply claim it was independently reviewed; independence is a fact
-about who actually ran what, settled outside the proposal's reach. A review from the
-same AI fails. Unknown or unstated origin fails too, on the safe side, not the
-permissive one.
+The fourth rule: the review must come from a different AI than the one that produced the change, and the system, not the proposal, decides who is who. A change cannot assert its own clean bill of health. Independence is a fact about which model actually ran which step, established outside the proposal's reach. A review traced back to the authoring AI fails. So does an origin that is unknown or unstated. The default lands on the safe side, not the convenient one.
 
-The fifth rule is two clear bars with no soft middle. A high-stakes change always
-goes to a human, no matter how good its score. Everything else can only auto-approve
-inside a narrow band, and a score that is impossible, infinite, or simply missing
-never auto-approves. The best verdict the gate can ever return is "eligible," which
-means a proposed change on its own branch, never something already applied. A
-separate program is the only thing allowed to actually apply a change, and that is
-the honest part.
+The fifth rule is two hard thresholds with nothing soft between them. A high-stakes change always routes to a human, however good its score. Everything else can auto-approve only inside a narrow band, and a score that is missing, infinite, or otherwise nonsensical never auto-approves at all. The best verdict the gate will ever hand back is "eligible": a candidate sitting on its own branch, not something already live. Applying a change is the job of a separate program, and only that program. That separation is the honest center of the whole thing.
 
-## The door is closed, on purpose
+## The door is shut, on purpose
 
-Here is what I will not dress up. This gate is the brake, and I built and proved the
-brake before building the engine. The engine is not on.
+Here is the part I will not dress up. This gate is the brake. I built and proved the brake before building the engine, and the engine is not running.
 
-Two concrete things keep it off. First, one of the four checks requires a human to
-have signed off on a category of change, and that record is empty: nothing has
-earned a sign-off, so the gate rejects essentially everything it sees today. Second,
-the program that would actually apply an approved change currently decides who to
-trust from loose settings rather than from verified records, which means it is not
-yet trustworthy enough to act on its own. So the whole system runs in propose-only
-mode: it can study its history, draft a change, and open it for review, but a human
-runs the final apply step by hand, every time.
+Two specific things keep it off. The human sign-off check reads from a record of approved change categories, and that record is empty. Nothing has earned a sign-off, so the gate rejects essentially everything it sees today. And the program that would apply an approved change still decides who to trust from loose configuration rather than verified records, which means it is not yet trustworthy enough to act unattended. So the system runs propose-only: it can study its history, draft a change, and open it for review, but a human runs the final apply step by hand, every single time.
 
-That is not a limitation I am hiding. It is the design. The part that judges is
-small, complete, and tested; the part that acts is held back precisely because it is
-not yet as trustworthy as the part that judges. A system earns the right to change
-itself one proven piece at a time, and the gate is the piece I trust first, because
-it is the piece that can be proven on its own.
+I am not hiding that as a shortcoming. It is the design. The part that judges is small, finished, and tested. The part that acts is deliberately held back, because it is not yet as trustworthy as the part that judges. A system earns the right to change itself one proven piece at a time. The gate is the piece I trust first, because it is the one piece that can be proven in isolation.
 
 ## What is in the repo
 
-The [repository](https://github.com/KiwiMaddog2020/self-improvement-gate) is the
-pure gate and the set of tests that define what it must do: eight tests, no outside
-dependencies, that pin all five rules and run in a hundredth of a second.
+The [repository](https://github.com/KiwiMaddog2020/self-improvement-gate) holds the pure gate and the tests that define what it must do: eight tests, zero outside dependencies, pinning all five rules and finishing in about a hundredth of a second.
 
 ```bash
 python3 -m pytest tests -q   # 8 passed
 ```
 
-The tests are written first and are the real specification; the gate exists to
-satisfy them. The other half, the part that studies the system's history and the
-part that would apply an approved change, stays private, because it touches a live
-system's internal state and, as above, has not earned the right to act on its own.
-What is public is the part worth trusting: a small, complete piece of code that
-knows it must never be the thing that decides it is allowed to change itself.
+The tests came first and are the real specification; the gate exists only to satisfy them. The other half stays private, the part that studies the live system's history and the part that would apply an approved change, because it reaches into a running system's internal state and, as above, has not earned the right to act on its own. What is public is the part worth trusting: a small, complete piece of code that knows it must never be the thing deciding it is allowed to change itself.
 
 ---
 
