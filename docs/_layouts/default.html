@@ -46,7 +46,7 @@
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
-<div class="page">
+<div class="page" id="top">
   <nav class="top">
     <a class="wordmark" href="/">Kevin Madson</a>
     <div class="links">
@@ -58,10 +58,25 @@
     <a class="back-icon" href="/" aria-label="Back to research notes" title="Research notes">←</a>
 {{ content }}
   </main>
+  <a class="to-top is-hidden" href="#top" aria-label="Back to top" title="Back to top">↑</a>
   <footer>
     The gate is public; the system it guards is not.
     <a href="/">All research notes.</a>
   </footer>
 </div>
+<script>
+// Reveal the back-to-top control once the reader is past the first screen.
+(function () {
+  var btn = document.querySelector('.to-top');
+  if (!btn) return;
+  var sync = function () {
+    var y = window.scrollY || document.documentElement.scrollTop || 0;
+    btn.classList.toggle('is-hidden', y < 600);
+  };
+  window.addEventListener('scroll', sync, { passive: true });
+  window.addEventListener('resize', sync, { passive: true });
+  sync();
+})();
+</script>
 </body>
 </html>
