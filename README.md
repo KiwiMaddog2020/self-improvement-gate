@@ -52,6 +52,12 @@ verified artifacts. The whole layer runs proposal-only, with a human running the
 apply step by hand. The note explains why that is the design rather than a
 limitation.
 
+## Checks
+
+```bash
+bash bin/check.sh   # runs the test suite; set PYTHON=/path/to/python to choose an interpreter
+```
+
 ## License
 
 MIT (see LICENSE).
